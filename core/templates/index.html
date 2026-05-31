@@ -1,0 +1,154 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EyeGuard — Cuida tu visión</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{% static 'css/index.css' %}"/>
+</head>
+<body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="grid-overlay"></div>
+
+  <div class="wrapper">
+
+    <!-- Logo -->
+    <div class="logo-block">
+      <div class="eye-icon">
+        <div class="eye-ring"></div>
+        <div class="eye-ring"></div>
+        <div class="eye-ring"></div>
+        <svg class="eye-svg" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="17" cy="17" rx="14" ry="9" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="17" cy="17" r="4.5" fill="#38bdf8" opacity=".9"/>
+          <circle cx="18.5" cy="15.5" r="1.4" fill="white" opacity=".6"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">EyeGuard</div>
+        <div class="brand-sub">Protección visual inteligente</div>
+      </div>
+    </div>
+
+    <!-- Card / Formulario -->
+    <div class="card">
+      <p class="card-title">Bienvenido — <span>Configura tu sesión</span></p>
+
+      <form method="POST" action="{% url 'inicio' %}" id="startForm" novalidate>
+        {% csrf_token %}
+
+        <!-- Nombre -->
+        <div class="field">
+          <label for="username">Tu nombre</label>
+          <div class="input-wrap">
+            <input
+              type="text"
+              id="username"
+              name="username"
+              placeholder="¿Cómo te llamas?"
+              maxlength="40"
+              autocomplete="off"
+              value="{{ username|default:'' }}"
+            />
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="hint" id="nameHint">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Por favor ingresa tu nombre para continuar.
+          </div>
+        </div>
+
+        <div class="divider">Elige tu modo</div>
+
+        <!-- Modos -->
+        <div class="mode-grid">
+
+          <!-- Básico -->
+          <label class="mode-card basic">
+            <input type="radio" name="mode" value="basic" checked/>
+            <div class="mode-inner">
+              <div class="mode-badge badge-basic">
+                <span class="mode-dot dot-basic"></span>Básico
+              </div>
+              <div class="mode-label">Sin cámara</div>
+              <div class="mode-desc">Temporizadores y alertas de descanso programadas.</div>
+              <div class="mode-features">
+                <div class="feat">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Alertas de descanso
+                </div>
+                <div class="feat">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Pausas activas
+                </div>
+                <div class="feat">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Historial de uso
+                </div>
+              </div>
+            </div>
+          </label>
+
+          <!-- Avanzado -->
+          <label class="mode-card advanced">
+            <input type="radio" name="mode" value="advanced"/>
+            <div class="mode-inner">
+              <div class="mode-badge badge-adv">
+                <span class="mode-dot dot-adv"></span>Avanzado
+              </div>
+              <div class="mode-label">Con cámara</div>
+              <div class="mode-desc">Análisis visual en tiempo real de fatiga ocular.</div>
+              <div class="mode-features">
+                <div class="feat">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Detección de fatiga
+                </div>
+                <div class="feat">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Análisis de atención
+                </div>
+                <div class="feat">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  IA predictiva
+                </div>
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <!-- Botón submit -->
+        <button type="submit" class="btn-start" id="btnStart">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/>
+          </svg>
+          Iniciar monitoreo
+        </button>
+
+      </form>
+    </div>
+
+    <!-- Footer -->
+    <p class="footer-note">
+      Tu cámara solo se activa con tu consentimiento explícito.<br>
+      <a href="#">Política de privacidad</a> · No almacenamos imágenes.
+    </p>
+
+  </div>
+
+  <script src="{% static 'js/index.js' %}"></script>
+</body>
+</html>
