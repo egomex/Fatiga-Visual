@@ -9,20 +9,15 @@
   <link rel="stylesheet" href="{% static 'css/dashboard_basico.css' %}"/>
 </head>
 <body>
-
-  <!-- Fondo atmosférico -->
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
   <div class="orb orb-3"></div>
   <div class="grid-overlay"></div>
 
-  <!-- ══════════════════════════════════════
-       TOPBAR
-  ══════════════════════════════════════ -->
   <header class="topbar">
     <div class="topbar-left">
       <div class="eye-mini">
-        <svg viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 34 34" fill="none">
           <ellipse cx="17" cy="17" rx="14" ry="9" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
           <circle cx="17" cy="17" r="4.5" fill="#38bdf8" opacity=".9"/>
           <circle cx="18.5" cy="15.5" r="1.4" fill="white" opacity=".6"/>
@@ -33,427 +28,64 @@
     </div>
     <div class="topbar-right">
       <span class="topbar-user">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-        </svg>
-        {{ username|default:"Usuario" }}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        {{ usuario.nombre }}
       </span>
-      <a href="{% url 'inicio' %}" class="btn-exit">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <polyline points="16 17 21 12 16 7"/>
-          <line x1="21" y1="12" x2="9" y2="12"/>
-        </svg>
+      <a href="{% url 'cerrar_sesion' %}" class="btn-exit">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         Salir
       </a>
     </div>
   </header>
 
-  <!-- ══════════════════════════════════════
-       CONTENIDO PRINCIPAL
-  ══════════════════════════════════════ -->
   <main class="main">
-
-    <!-- Bienvenida -->
     <div class="page-header">
-      <h1 class="page-title">Panel de control <span>básico</span></h1>
+      <h1 class="page-title">Hola, <span>{{ usuario.nombre }}</span></h1>
       <p class="page-sub">Selecciona una opción para comenzar a cuidar tu visión.</p>
     </div>
 
-    <!-- ── TARJETAS DE NAVEGACIÓN ── -->
     <div class="nav-grid">
 
-      <!-- 1. Alertas predeterminadas -->
-      <button class="nav-card" id="cardPredeterminadas" onclick="showSection('predeterminadas')">
+      <a href="{% url 'alertas_predeterminadas' %}" class="nav-card">
         <div class="nav-card-icon icon-blue">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-            <circle cx="12" cy="3" r="1" fill="currentColor"/>
-          </svg>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         </div>
         <div class="nav-card-body">
           <h3>Alertas predeterminadas</h3>
           <p>Descansos recomendados por especialistas en salud visual.</p>
         </div>
         <div class="nav-card-arrow">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
-      </button>
+      </a>
 
-      <!-- 2. Alertas configurables -->
-      <button class="nav-card" id="cardConfigurables" onclick="showSection('configurables')">
+      <a href="{% url 'alertas_configurables' %}" class="nav-card">
         <div class="nav-card-icon icon-violet">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
-            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-          </svg>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
         </div>
         <div class="nav-card-body">
           <h3>Alertas configurables</h3>
           <p>Personaliza los intervalos de descanso a tu ritmo de trabajo.</p>
         </div>
         <div class="nav-card-arrow">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
-      </button>
+      </a>
 
-      <!-- 3. Historial -->
-      <button class="nav-card" id="cardHistorial" onclick="showSection('historial')">
+      <a href="{% url 'historial' %}" class="nav-card">
         <div class="nav-card-icon icon-green">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/>
-            <line x1="16" y1="17" x2="8" y2="17"/>
-            <polyline points="10 9 9 9 8 9"/>
-          </svg>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         </div>
         <div class="nav-card-body">
           <h3>Historial de mensajes</h3>
-          <p>Consulta todas las alertas y descansos registrados hoy.</p>
+          <p>Consulta todas las alertas registradas en tu cuenta.</p>
         </div>
         <div class="nav-card-arrow">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
-      </button>
+      </a>
 
-    </div><!-- /nav-grid -->
-
-
-    <!-- ══════════════════════════════════════
-         SECCIÓN 1 — ALERTAS PREDETERMINADAS
-    ══════════════════════════════════════ -->
-    <section class="section hidden" id="secPredeterminadas">
-      <div class="section-header">
-        <button class="btn-back" onclick="hideSection()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          Volver
-        </button>
-        <div>
-          <h2 class="section-title">Alertas <span class="c-blue">predeterminadas</span></h2>
-          <p class="section-sub">Protocolos recomendados por oftalmólogos y ergonomistas.</p>
-        </div>
-      </div>
-
-      <!-- Regla 20-20-20 destacada -->
-      <div class="rule-hero">
-        <div class="rule-hero-left">
-          <span class="rule-tag">⭐ Más recomendada</span>
-          <h3 class="rule-name">Regla 20-20-20</h3>
-          <p class="rule-desc">Cada <strong>20 minutos</strong>, mira a <strong>20 pies</strong> (~6 m) de distancia durante <strong>20 segundos</strong>. Reduce la fatiga muscular ocular de forma comprobada.</p>
-          <div class="rule-meta">
-            <span class="meta-chip">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              Cada 20 min
-            </span>
-            <span class="meta-chip">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              20 segundos
-            </span>
-          </div>
-          <button class="btn-activate blue" data-interval="20" data-duration="20" data-name="Regla 20-20-20" onclick="activatePreset(this)">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
-            Activar este protocolo
-          </button>
-        </div>
-        <div class="rule-hero-visual">
-          <div class="eye-anim">
-            <div class="ea-ring r1"></div>
-            <div class="ea-ring r2"></div>
-            <div class="ea-ring r3"></div>
-            <svg class="ea-eye" viewBox="0 0 48 48" fill="none">
-              <ellipse cx="24" cy="24" rx="20" ry="13" stroke="#38bdf8" stroke-width="2.5"/>
-              <circle cx="24" cy="24" r="6" fill="#38bdf8" opacity=".85"/>
-              <circle cx="26.5" cy="21.5" r="2" fill="white" opacity=".55"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      <!-- Otras reglas -->
-      <h4 class="subsection-label">Otros protocolos recomendados</h4>
-      <div class="presets-grid">
-
-        <div class="preset-card">
-          <div class="preset-icon icon-blue">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          </div>
-          <div class="preset-body">
-            <h4>Pausa corta — 5 min/hora</h4>
-            <p>Descanso de 5 minutos por cada hora de trabajo continuo frente a pantalla.</p>
-            <div class="preset-pills">
-              <span class="pill blue">Cada 60 min</span>
-              <span class="pill">5 min descanso</span>
-            </div>
-          </div>
-          <button class="btn-activate-sm blue" data-interval="60" data-duration="300" data-name="Pausa 5min/hora" onclick="activatePreset(this)">Activar</button>
-        </div>
-
-        <div class="preset-card">
-          <div class="preset-icon icon-violet">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
-          </div>
-          <div class="preset-body">
-            <h4>Técnica Pomodoro ocular</h4>
-            <p>25 minutos de trabajo, 5 de descanso visual. Adaptación del método Pomodoro para los ojos.</p>
-            <div class="preset-pills">
-              <span class="pill violet">Cada 25 min</span>
-              <span class="pill">5 min descanso</span>
-            </div>
-          </div>
-          <button class="btn-activate-sm violet" data-interval="25" data-duration="300" data-name="Pomodoro Ocular" onclick="activatePreset(this)">Activar</button>
-        </div>
-
-        <div class="preset-card">
-          <div class="preset-icon icon-green">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          </div>
-          <div class="preset-body">
-            <h4>Pausa larga — 15 min/2h</h4>
-            <p>Descanso de 15 minutos por cada dos horas de trabajo. Ideal para jornadas largas.</p>
-            <div class="preset-pills">
-              <span class="pill green">Cada 120 min</span>
-              <span class="pill">15 min descanso</span>
-            </div>
-          </div>
-          <button class="btn-activate-sm green" data-interval="120" data-duration="900" data-name="Pausa 15min/2h" onclick="activatePreset(this)">Activar</button>
-        </div>
-
-        <div class="preset-card">
-          <div class="preset-icon icon-orange">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </div>
-          <div class="preset-body">
-            <h4>Protocolo OMS</h4>
-            <p>Basado en las guías de la Organización Mundial de la Salud para uso de pantallas seguro.</p>
-            <div class="preset-pills">
-              <span class="pill orange">Cada 45 min</span>
-              <span class="pill">10 min descanso</span>
-            </div>
-          </div>
-          <button class="btn-activate-sm orange" data-interval="45" data-duration="600" data-name="Protocolo OMS" onclick="activatePreset(this)">Activar</button>
-        </div>
-
-      </div><!-- /presets-grid -->
-
-      <!-- Timer activo -->
-      <div class="timer-panel hidden" id="timerPanel">
-        <div class="timer-info">
-          <div class="timer-label" id="timerLabel">Regla 20-20-20 activa</div>
-          <div class="timer-clock" id="timerClock">20:00</div>
-          <div class="timer-bar-wrap"><div class="timer-bar" id="timerBar"></div></div>
-          <div class="timer-next" id="timerNext">Próxima alerta en 20:00</div>
-        </div>
-        <button class="btn-stop" id="btnStop" onclick="stopTimer()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-          Detener
-        </button>
-      </div>
-
-    </section>
-
-
-    <!-- ══════════════════════════════════════
-         SECCIÓN 2 — ALERTAS CONFIGURABLES
-    ══════════════════════════════════════ -->
-    <section class="section hidden" id="secConfigurables">
-      <div class="section-header">
-        <button class="btn-back" onclick="hideSection()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          Volver
-        </button>
-        <div>
-          <h2 class="section-title">Alertas <span class="c-violet">configurables</span></h2>
-          <p class="section-sub">Ajusta los intervalos y la duración del descanso a tu ritmo.</p>
-        </div>
-      </div>
-
-      <div class="config-layout">
-
-        <!-- Panel de configuración -->
-        <div class="config-panel">
-          <h3 class="config-panel-title">Configurar intervalo</h3>
-
-          <!-- Intervalo de trabajo -->
-          <div class="config-field">
-            <div class="config-field-header">
-              <label>Tiempo de trabajo</label>
-              <span class="config-value" id="workVal">30 min</span>
-            </div>
-            <input type="range" id="workRange" min="5" max="120" step="5" value="30" oninput="updateRange('work')"/>
-            <div class="range-labels"><span>5 min</span><span>120 min</span></div>
-          </div>
-
-          <!-- Duración del descanso -->
-          <div class="config-field">
-            <div class="config-field-header">
-              <label>Duración del descanso</label>
-              <span class="config-value" id="breakVal">5 min</span>
-            </div>
-            <input type="range" id="breakRange" min="1" max="30" step="1" value="5" oninput="updateRange('break')"/>
-            <div class="range-labels"><span>1 min</span><span>30 min</span></div>
-          </div>
-
-          <!-- Mensaje personalizado -->
-          <div class="config-field">
-            <label>Mensaje de la alerta <span class="label-opt">(opcional)</span></label>
-            <input type="text" id="customMessage" placeholder="Ej: ¡Es hora de descansar la vista!" maxlength="80"/>
-          </div>
-
-          <!-- Sonido -->
-          <div class="config-field config-row">
-            <label>Notificación sonora</label>
-            <label class="toggle">
-              <input type="checkbox" id="soundToggle" checked/>
-              <span class="toggle-track">
-                <span class="toggle-thumb"></span>
-              </span>
-            </label>
-          </div>
-
-          <button class="btn-activate violet wide" onclick="activateCustom()">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
-            Iniciar con esta configuración
-          </button>
-        </div>
-
-        <!-- Preview -->
-        <div class="config-preview">
-          <h3 class="config-panel-title">Vista previa</h3>
-          <div class="preview-card">
-            <div class="preview-row">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span>Trabajas <strong id="prev-work">30 min</strong></span>
-            </div>
-            <div class="preview-divider"></div>
-            <div class="preview-row">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              <span>Descansas <strong id="prev-break">5 min</strong></span>
-            </div>
-            <div class="preview-divider"></div>
-            <div class="preview-row">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-              <span id="prev-msg">Sin mensaje personalizado</span>
-            </div>
-            <div class="preview-cycle">
-              <span class="cycle-work" id="cycleWork" style="width:75%">Trabajo</span>
-              <span class="cycle-break" id="cycleBreak" style="width:25%">Descanso</span>
-            </div>
-          </div>
-
-          <!-- Timer configurable activo -->
-          <div class="timer-panel hidden" id="timerPanelCustom">
-            <div class="timer-info">
-              <div class="timer-label">Tu configuración activa</div>
-              <div class="timer-clock" id="timerClockCustom">30:00</div>
-              <div class="timer-bar-wrap"><div class="timer-bar violet" id="timerBarCustom"></div></div>
-              <div class="timer-next" id="timerNextCustom">Próxima alerta en 30:00</div>
-            </div>
-            <button class="btn-stop" onclick="stopTimerCustom()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-              Detener
-            </button>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-
-    <!-- ══════════════════════════════════════
-         SECCIÓN 3 — HISTORIAL
-    ══════════════════════════════════════ -->
-    <section class="section hidden" id="secHistorial">
-      <div class="section-header">
-        <button class="btn-back" onclick="hideSection()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          Volver
-        </button>
-        <div>
-          <h2 class="section-title">Historial de <span class="c-green">mensajes</span></h2>
-          <p class="section-sub">Registro de todas las alertas generadas en tu sesión.</p>
-        </div>
-      </div>
-
-      <!-- Stats row -->
-      <div class="stats-row">
-        <div class="stat-box">
-          <span class="stat-num" id="statTotal">0</span>
-          <span class="stat-label">Alertas totales</span>
-        </div>
-        <div class="stat-box">
-          <span class="stat-num green" id="statCompletadas">0</span>
-          <span class="stat-label">Descansadas</span>
-        </div>
-        <div class="stat-box">
-          <span class="stat-num blue" id="statProtocolo">—</span>
-          <span class="stat-label">Protocolo activo</span>
-        </div>
-        <div class="stat-box">
-          <span class="stat-num" id="statTiempo">0 min</span>
-          <span class="stat-label">Tiempo monitoreado</span>
-        </div>
-      </div>
-
-      <!-- Filtros -->
-      <div class="hist-filters">
-        <button class="filter-btn active" onclick="filterHistory('all', this)">Todas</button>
-        <button class="filter-btn" onclick="filterHistory('preset', this)">Predeterminadas</button>
-        <button class="filter-btn" onclick="filterHistory('custom', this)">Configuradas</button>
-        <button class="filter-btn danger" onclick="clearHistory()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-          Limpiar
-        </button>
-      </div>
-
-      <!-- Lista de alertas -->
-      <div class="hist-list" id="histList">
-        <!-- Estado vacío -->
-        <div class="hist-empty" id="histEmpty">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#6b85a8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-          </svg>
-          <p>Aún no hay alertas registradas.<br>Activa un protocolo para empezar.</p>
-        </div>
-      </div>
-
-    </section>
-
-  </main>
-
-  <!-- ══════════════════════════════════════
-       MODAL DE ALERTA / DESCANSO
-  ══════════════════════════════════════ -->
-  <div class="modal-overlay hidden" id="alertModal">
-    <div class="modal">
-      <div class="modal-eye">
-        <svg viewBox="0 0 48 48" fill="none">
-          <ellipse cx="24" cy="24" rx="20" ry="13" stroke="#38bdf8" stroke-width="2.5"/>
-          <circle cx="24" cy="24" r="6" fill="#38bdf8" opacity=".85"/>
-          <circle cx="26.5" cy="21.5" r="2" fill="white" opacity=".55"/>
-        </svg>
-      </div>
-      <h2 class="modal-title" id="modalTitle">¡Hora de descansar!</h2>
-      <p class="modal-msg" id="modalMsg">Mira a 6 metros de distancia durante 20 segundos.</p>
-      <div class="modal-countdown" id="modalCountdown">20</div>
-      <div class="modal-bar-wrap"><div class="modal-bar" id="modalBar"></div></div>
-      <button class="btn-activate blue" onclick="dismissAlert()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Listo, ya descansé
-      </button>
     </div>
-  </div>
-
-  <script src="{% static 'js/dashboard_basico.js' %}"></script>
+  </main>
 </body>
 </html>

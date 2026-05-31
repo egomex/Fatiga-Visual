@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>EyeGuard — Cuida tu visión</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
@@ -16,13 +16,12 @@
 
   <div class="wrapper">
 
-    <!-- Logo -->
     <div class="logo-block">
       <div class="eye-icon">
         <div class="eye-ring"></div>
         <div class="eye-ring"></div>
         <div class="eye-ring"></div>
-        <svg class="eye-svg" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg class="eye-svg" viewBox="0 0 34 34" fill="none">
           <ellipse cx="17" cy="17" rx="14" ry="9" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
           <circle cx="17" cy="17" r="4.5" fill="#38bdf8" opacity=".9"/>
           <circle cx="18.5" cy="15.5" r="1.4" fill="white" opacity=".6"/>
@@ -34,118 +33,126 @@
       </div>
     </div>
 
-    <!-- Card / Formulario -->
+    {% if sesion_activa %}
+    <!-- ══ PANTALLA: SESIÓN ACTIVA ══ -->
+    <div class="card">
+      <div class="welcome-back">
+        <div class="wb-avatar">{{ username|slice:":1"|upper }}</div>
+        <div>
+          <p class="wb-label">Bienvenido de nuevo</p>
+          <h2 class="wb-name">{{ username }}</h2>
+        </div>
+      </div>
+
+      <p class="wb-question">¿Deseas continuar con esta cuenta o ingresar con otra?</p>
+
+      <form method="POST" action="{% url 'inicio' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="continuar"/>
+        <button type="submit" class="btn-activate blue wide">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+          Continuar como {{ username }}
+        </button>
+      </form>
+
+      <div class="divider">o</div>
+
+      <form method="POST" action="{% url 'inicio' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="cambiar"/>
+        <button type="submit" class="btn-outline wide">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Cambiar de usuario
+        </button>
+      </form>
+    </div>
+
+    {% else %}
+    <!-- ══ PANTALLA: LOGIN / REGISTRO ══ -->
     <div class="card">
       <p class="card-title">Bienvenido — <span>Configura tu sesión</span></p>
 
       <form method="POST" action="{% url 'inicio' %}" id="startForm" novalidate>
         {% csrf_token %}
+        <input type="hidden" name="action" value="login"/>
 
-        <!-- Nombre -->
         <div class="field">
           <label for="username">Tu nombre</label>
           <div class="input-wrap">
-            <input
-              type="text"
-              id="username"
-              name="username"
-              placeholder="¿Cómo te llamas?"
-              maxlength="40"
-              autocomplete="off"
-              value="{{ username|default:'' }}"
-            />
-            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
+            <input type="text" id="username" name="username"
+                   placeholder="¿Cómo te llamas?"
+                   maxlength="40" autocomplete="off"
+                   value="{{ nombre_previo|default:'' }}"/>
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
             </svg>
           </div>
-          <div class="hint" id="nameHint">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
+          {% if errores.nombre %}
+            <div class="field-error">{{ errores.nombre }}</div>
+          {% endif %}
+        </div>
+
+        <div class="field">
+          <label for="password">Contraseña</label>
+          <div class="input-wrap">
+            <input type="password" id="password" name="password"
+                   placeholder="Mínimo 4 caracteres"
+                   maxlength="64" autocomplete="current-password"/>
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
-            Por favor ingresa tu nombre para continuar.
           </div>
+          {% if errores.password %}
+            <div class="field-error">{{ errores.password }}</div>
+          {% endif %}
+          <p class="field-hint">Si es tu primera vez, se creará tu cuenta automáticamente.</p>
         </div>
 
         <div class="divider">Elige tu modo</div>
 
-        <!-- Modos -->
         <div class="mode-grid">
-
-          <!-- Básico -->
           <label class="mode-card basic">
-            <input type="radio" name="mode" value="basic" checked/>
+            <input type="radio" name="mode" value="basic" {% if mode_previo != 'advanced' %}checked{% endif %}/>
             <div class="mode-inner">
-              <div class="mode-badge badge-basic">
-                <span class="mode-dot dot-basic"></span>Básico
-              </div>
+              <div class="mode-badge badge-basic"><span class="mode-dot dot-basic"></span>Básico</div>
               <div class="mode-label">Sin cámara</div>
               <div class="mode-desc">Temporizadores y alertas de descanso programadas.</div>
               <div class="mode-features">
-                <div class="feat">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                  Alertas de descanso
-                </div>
-                <div class="feat">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                  Pausas activas
-                </div>
-                <div class="feat">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                  Historial de uso
-                </div>
+                <div class="feat"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Alertas de descanso</div>
+                <div class="feat"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Pausas activas</div>
+                <div class="feat"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Historial guardado</div>
               </div>
             </div>
           </label>
-
-          <!-- Avanzado -->
           <label class="mode-card advanced">
-            <input type="radio" name="mode" value="advanced"/>
+            <input type="radio" name="mode" value="advanced" {% if mode_previo == 'advanced' %}checked{% endif %}/>
             <div class="mode-inner">
-              <div class="mode-badge badge-adv">
-                <span class="mode-dot dot-adv"></span>Avanzado
-              </div>
+              <div class="mode-badge badge-adv"><span class="mode-dot dot-adv"></span>Avanzado</div>
               <div class="mode-label">Con cámara</div>
               <div class="mode-desc">Análisis visual en tiempo real de fatiga ocular.</div>
               <div class="mode-features">
-                <div class="feat">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                  Detección de fatiga
-                </div>
-                <div class="feat">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                  Análisis de atención
-                </div>
-                <div class="feat">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                  IA predictiva
-                </div>
+                <div class="feat"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Detección de fatiga</div>
+                <div class="feat"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Análisis de atención</div>
+                <div class="feat"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>IA predictiva</div>
               </div>
             </div>
           </label>
         </div>
 
-        <!-- Botón submit -->
-        <button type="submit" class="btn-start" id="btnStart">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/>
+        <button type="submit" class="btn-activate blue wide" id="btnStart">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/>
           </svg>
           Iniciar monitoreo
         </button>
-
       </form>
     </div>
 
-    <!-- Footer -->
     <p class="footer-note">
       Tu cámara solo se activa con tu consentimiento explícito.<br>
       <a href="#">Política de privacidad</a> · No almacenamos imágenes.
     </p>
+    {% endif %}
 
   </div>
 

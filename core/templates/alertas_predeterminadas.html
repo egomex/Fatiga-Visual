@@ -1,0 +1,160 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EyeGuard — Alertas predeterminadas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{% static 'css/dashboard_basico.css' %}"/>
+</head>
+<body>
+  <div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
+  <div class="grid-overlay"></div>
+
+  {% include 'partials/topbar.html' %}
+
+  <main class="main">
+    <div class="section-header">
+      <a href="{% url 'dashboard_basico' %}" class="btn-back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Volver
+      </a>
+      <div>
+        <h2 class="section-title">Alertas <span class="c-blue">predeterminadas</span></h2>
+        <p class="section-sub">Protocolos recomendados por oftalmólogos y ergonomistas.</p>
+      </div>
+    </div>
+
+    <!-- Timer activo (si hay protocolo en sesión) -->
+    {% if protocolo_activo %}
+    <div class="timer-panel" id="timerPanel"
+         data-interval="{{ protocolo_activo.intervalo }}"
+         data-duracion="{{ protocolo_activo.duracion }}"
+         data-nombre="{{ protocolo_activo.nombre }}"
+         data-mensaje="{{ protocolo_activo.mensaje }}"
+         data-pid="{{ protocolo_activo.id }}">
+      <div class="timer-info">
+        <div class="timer-label">{{ protocolo_activo.nombre }} activa</div>
+        <div class="timer-clock" id="timerClock">{{ protocolo_activo.intervalo }}:00</div>
+        <div class="timer-bar-wrap"><div class="timer-bar" id="timerBar" style="width:100%"></div></div>
+        <div class="timer-next" id="timerNext">Próxima alerta en {{ protocolo_activo.intervalo }}:00</div>
+      </div>
+      <form method="POST" action="{% url 'alertas_predeterminadas' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="detener"/>
+        <button type="submit" class="btn-stop">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          Detener
+        </button>
+      </form>
+    </div>
+    {% endif %}
+
+    <!-- Regla 20-20-20 destacada -->
+    {% for p in protocolos %}{% if p.destacado %}
+    <div class="rule-hero">
+      <div class="rule-hero-left">
+        <span class="rule-tag">⭐ Más recomendada</span>
+        <h3 class="rule-name">{{ p.nombre }}</h3>
+        <p class="rule-desc">{{ p.desc }}</p>
+        <div class="rule-meta">
+          <span class="meta-chip">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            {{ p.cada_label }}
+          </span>
+          <span class="meta-chip">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            {{ p.duracion }} min descanso
+          </span>
+        </div>
+        {% if not protocolo_activo %}
+        <form method="POST" action="{% url 'alertas_predeterminadas' %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="activar"/>
+          <input type="hidden" name="protocolo_id" value="{{ p.id }}"/>
+          <button type="submit" class="btn-activate blue">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            Activar este protocolo
+          </button>
+        </form>
+        {% else %}
+        <p class="proto-active-note">Ya tienes un protocolo activo. Detenlo primero.</p>
+        {% endif %}
+      </div>
+      <div class="rule-hero-visual">
+        <div class="eye-anim">
+          <div class="ea-ring r1"></div><div class="ea-ring r2"></div><div class="ea-ring r3"></div>
+          <svg class="ea-eye" viewBox="0 0 48 48" fill="none">
+            <ellipse cx="24" cy="24" rx="20" ry="13" stroke="#38bdf8" stroke-width="2.5"/>
+            <circle cx="24" cy="24" r="6" fill="#38bdf8" opacity=".85"/>
+            <circle cx="26.5" cy="21.5" r="2" fill="white" opacity=".55"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    {% endif %}{% endfor %}
+
+    <!-- Otros protocolos -->
+    <h4 class="subsection-label">Otros protocolos recomendados</h4>
+    <div class="presets-grid">
+      {% for p in protocolos %}{% if not p.destacado %}
+      <div class="preset-card">
+        <div class="preset-icon icon-{{ p.color }}">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="preset-body">
+          <h4>{{ p.nombre }}</h4>
+          <p>{{ p.desc }}</p>
+          <div class="preset-pills">
+            <span class="pill {{ p.color }}">{{ p.cada_label }}</span>
+            <span class="pill">{{ p.duracion }} min descanso</span>
+          </div>
+        </div>
+        {% if not protocolo_activo %}
+        <form method="POST" action="{% url 'alertas_predeterminadas' %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="activar"/>
+          <input type="hidden" name="protocolo_id" value="{{ p.id }}"/>
+          <button type="submit" class="btn-activate-sm {{ p.color }}">Activar</button>
+        </form>
+        {% else %}
+        <span class="btn-activate-sm disabled">Activar</span>
+        {% endif %}
+      </div>
+      {% endif %}{% endfor %}
+    </div>
+  </main>
+
+  <!-- Modal de descanso (controlado por JS) -->
+  <div class="modal-overlay hidden" id="alertModal">
+    <div class="modal">
+      <div class="modal-eye">
+        <svg viewBox="0 0 48 48" fill="none">
+          <ellipse cx="24" cy="24" rx="20" ry="13" stroke="#38bdf8" stroke-width="2.5"/>
+          <circle cx="24" cy="24" r="6" fill="#38bdf8" opacity=".85"/>
+          <circle cx="26.5" cy="21.5" r="2" fill="white" opacity=".55"/>
+        </svg>
+      </div>
+      <h2 class="modal-title" id="modalTitle">¡Hora de descansar!</h2>
+      <p class="modal-msg" id="modalMsg"></p>
+      <div class="modal-countdown" id="modalCountdown">60</div>
+      <div class="modal-bar-wrap"><div class="modal-bar" id="modalBar"></div></div>
+
+      <!-- Form oculto para registrar alerta disparada en BD -->
+      <form method="POST" action="{% url 'alertas_predeterminadas' %}" id="formAlertaDisparada">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="alerta_disparada"/>
+        <input type="hidden" name="protocolo_id" id="hiddenPid" value=""/>
+      </form>
+
+      <button class="btn-activate blue" onclick="dismissAlert()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Listo, ya descansé
+      </button>
+    </div>
+  </div>
+
+  <script src="{% static 'js/dashboard_basico.js' %}"></script>
+</body>
+</html>

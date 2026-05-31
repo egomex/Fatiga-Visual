@@ -191,7 +191,8 @@ label {
   pointer-events: none;
   transition: color .2s;
 }
-input[type="text"] {
+input[type="text"],
+input[type="password"] {
   width: 100%;
   background: var(--surface);
   border: 1.5px solid var(--border);
@@ -202,9 +203,13 @@ input[type="text"] {
   color: var(--text);
   outline: none;
   transition: border-color .2s, box-shadow .2s;
+  -webkit-appearance: none;
+  appearance: none;
 }
-input[type="text"]::placeholder { color: var(--muted); }
-input[type="text"]:focus {
+input[type="text"]::placeholder,
+input[type="password"]::placeholder { color: var(--muted); }
+input[type="text"]:focus,
+input[type="password"]:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(56,189,248,.12);
 }
@@ -374,4 +379,143 @@ input[type="text"]:focus {
   .card { padding: 28px 20px; }
   .mode-grid { grid-template-columns: 1fr; }
   .brand-name { font-size: 1.9rem; }
+}
+
+/* ── Pantalla sesión activa ── */
+.welcome-back {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+}
+.wb-avatar {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 1.4rem; font-weight: 800;
+  color: #050d1a;
+  flex-shrink: 0;
+}
+.wb-label { font-size: .74rem; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.wb-name  { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; margin-top: 2px; }
+.wb-question { font-size: .88rem; color: var(--muted); text-align: center; }
+
+.btn-outline {
+  width: 100%; padding: 13px;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  font-family: 'Syne', sans-serif;
+  font-size: .95rem; font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: border-color .2s, color .2s;
+}
+.btn-outline:hover { border-color: rgba(56,189,248,.35); color: var(--text); }
+
+/* ── Campo contraseña ── */
+.field-error {
+  font-size: .75rem;
+  color: #f87171;
+  display: flex; align-items: center; gap: 5px;
+}
+.field-hint {
+  font-size: .73rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ── btn-activate reutilizable en index ── */
+.btn-activate {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 13px 20px; border-radius: 12px; border: none;
+  font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+  cursor: pointer; transition: transform .2s, box-shadow .2s, opacity .2s;
+  text-decoration: none;
+}
+.btn-activate.blue {
+  background: linear-gradient(135deg, var(--accent), #0ea5e9);
+  color: #050d1a; box-shadow: 0 4px 24px rgba(56,189,248,.3);
+}
+.btn-activate.blue:hover  { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(56,189,248,.45); }
+.btn-activate.wide        { width: 100%; }
+
+/* ── Fixes: password input + botón submit ── */
+
+/* El navegador aplica estilos nativos a type=password, esto los sobreescribe */
+input[type="password"] {
+  width: 100%;
+  background: var(--surface) !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: 10px;
+  padding: 13px 14px 13px 42px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .95rem;
+  color: var(--text) !important;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  -webkit-appearance: none;
+  appearance: none;
+  box-shadow: none !important;
+}
+input[type="password"]::placeholder { color: var(--muted); }
+input[type="password"]:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(56,189,248,.12) !important;
+}
+
+/* Autocompletado del navegador — forzar fondo oscuro */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0px 1000px var(--surface) inset;
+  transition: background-color 5000s ease-in-out 0s;
+  caret-color: var(--text);
+}
+
+/* Botón submit sin estilos nativos del navegador */
+button[type="submit"].btn-activate,
+.btn-activate {
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  overflow: hidden;
+}
+button[type="submit"].btn-activate::after,
+.btn-activate::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.15), transparent);
+  opacity: 0;
+  transition: opacity .2s;
+}
+button[type="submit"].btn-activate.blue,
+.btn-activate.blue {
+  background: linear-gradient(135deg, var(--accent) 0%, #0ea5e9 100%) !important;
+  color: #050d1a !important;
+  box-shadow: 0 4px 24px rgba(56,189,248,.3);
+}
+button[type="submit"].btn-activate.blue:hover,
+.btn-activate.blue:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(56,189,248,.45);
+}
+button[type="submit"].btn-activate.blue:hover::after,
+.btn-activate.blue:hover::after { opacity: 1; }
+
+.btn-activate.advanced-mode {
+  background: linear-gradient(135deg, var(--accent2) 0%, #6366f1 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 24px rgba(129,140,248,.3);
+}
+.btn-activate.advanced-mode:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(129,140,248,.45);
 }
