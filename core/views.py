@@ -70,27 +70,25 @@ def _get_protocolo(pid):
 
 
 # ─────────────────────────────────────────────────────────────
-# INICIO — login / registro / bienvenida de regreso
+# INICIO — login / registro / selector de modo
 # ─────────────────────────────────────────────────────────────
 def inicio(request):
     """
-    GET:
-      - Si hay sesión activa → muestra pantalla "¿Continuar como X?"
-      - Si no              → muestra formulario de login/registro
-    POST action=continuar  → redirige al dashboard sin cambiar usuario
-    POST action=cambiar    → limpia sesión, muestra form limpio
-    POST action=login      → autentica o registra y abre sesión
+    Flujo:
+      Sin sesión  → formulario login/registro
+      Con sesión  → selector de modo (básico / avanzado) con opción de cerrar sesión
+      Salir       → vuelve al selector de modo (sesión se mantiene)
+      Cerrar sesión → limpia sesión y pide login de nuevo
     """
-    # ── Acción: el usuario quiere continuar con su sesión guardada ──
-    if request.method == 'POST' and request.POST.get('action') == 'continuar':
+    # ── POST: elegir modo con sesión activa ──
+    if request.method == 'POST' and request.POST.get('action') == 'elegir_modo':
+        mode = request.POST.get('mode', 'basic')
+        request.session['mode'] = mode
+        if mode == 'advanced':
+            return redirect('dashboard_avanzado')
         return redirect('dashboard_basico')
 
-    # ── Acción: el usuario quiere cambiar de cuenta ──
-    if request.method == 'POST' and request.POST.get('action') == 'cambiar':
-        request.session.flush()
-        return redirect('inicio')
-
-    # ── Acción: login / registro ──
+    # ── POST: login / registro ──
     if request.method == 'POST' and request.POST.get('action') == 'login':
         nombre   = request.POST.get('username', '').strip()
         password = request.POST.get('password', '').strip()
@@ -101,14 +99,12 @@ def inicio(request):
             errores['nombre'] = 'El nombre es obligatorio.'
         if not password:
             errores['password'] = 'La contraseña es obligatoria.'
-        if len(password) < 4:
+        elif len(password) < 4:
             errores['password'] = 'La contraseña debe tener al menos 4 caracteres.'
 
         if not errores:
             usuario = Usuario.objects.filter(nombre=nombre).first()
-
             if usuario:
-                # Usuario existente → verificar contraseña
                 if check_password(password, usuario.password):
                     request.session['usuario_id'] = usuario.pk
                     request.session['username']   = usuario.nombre
@@ -119,7 +115,6 @@ def inicio(request):
                 else:
                     errores['password'] = 'Contraseña incorrecta.'
             else:
-                # Usuario nuevo → registrar
                 nuevo = Usuario(nombre=nombre)
                 nuevo.set_password(password)
                 nuevo.save()
@@ -131,9 +126,9 @@ def inicio(request):
                 return redirect('dashboard_basico')
 
         return render(request, 'index.html', {
-            'errores': errores,
+            'errores':      errores,
             'nombre_previo': nombre,
-            'mode_previo':   mode,
+            'mode_previo':  mode,
         })
 
     # ── GET: ¿hay sesión activa? ──
@@ -143,7 +138,7 @@ def inicio(request):
             usuario = Usuario.objects.get(pk=usuario_id)
             return render(request, 'index.html', {
                 'sesion_activa': True,
-                'username':      usuario.nombre,
+                'usuario':       usuario,
             })
         except Usuario.DoesNotExist:
             request.session.flush()
@@ -372,7 +367,14 @@ def historial(request):
 
 
 # ─────────────────────────────────────────────────────────────
-# CERRAR SESIÓN
+# SALIR — vuelve al selector de modo, sesión se mantiene
+# ─────────────────────────────────────────────────────────────
+def salir(request):
+    return redirect('inicio')
+
+
+# ─────────────────────────────────────────────────────────────
+# CERRAR SESIÓN — limpia sesión completamente
 # ─────────────────────────────────────────────────────────────
 def cerrar_sesion(request):
     request.session.flush()
