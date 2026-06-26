@@ -17,7 +17,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'core.apps.CoreConfig',          # ← nuestra app registrada
+    'core.apps.CoreConfig',
+
 ]
 
 MIDDLEWARE = [
@@ -83,3 +84,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Sesiones: duración de 30 días, se mantiene aunque se cierre el navegador
 SESSION_COOKIE_AGE     = 60 * 60 * 24 * 30   # 30 días en segundos
 SESSION_SAVE_EVERY_REQUEST = True
+
+SSL_CERTIFICATE = BASE_DIR / 'localhost+1.pem'
+SSL_PRIVATE_KEY = BASE_DIR / 'localhost+1-key.pem'
+CSRF_TRUSTED_ORIGINS = [
+    'https://localhost:8000',
+    'https://127.0.0.1:8000',
+]
+
+CSRF_COOKIE_SECURE   = False
+SESSION_COOKIE_SECURE = False

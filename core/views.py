@@ -1,7 +1,17 @@
+import json
+import urllib.request
+import urllib.error
+try:
+    import requests as req_lib
+    USAR_REQUESTS = True
+except ImportError:
+    USAR_REQUESTS = False
 from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
-from .models import Usuario, HistorialAlerta, ConfiguracionAlerta
+from .models import Usuario, HistorialAlerta, ConfiguracionAlerta, SesionAvanzada
 
 # ─────────────────────────────────────────────────────────────
 # PROTOCOLOS PREDETERMINADOS (definidos en servidor)
@@ -382,11 +392,304 @@ def cerrar_sesion(request):
 
 
 # ─────────────────────────────────────────────────────────────
-# PLACEHOLDER MODO AVANZADO
+# MODO AVANZADO — helpers
 # ─────────────────────────────────────────────────────────────
-def dashboard_avanzado(request):
+
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+
+def _llamar_groq(api_key, prompt):
+    """
+    Llama a la API de Groq (LLaMA 3) y devuelve el texto de respuesta.
+    Usa requests si está disponible, si no urllib.
+    """
+    headers = {
+        "Content-Type":  "application/json",
+        "Authorization": f"Bearer {api_key}",
+        "User-Agent":    "Mozilla/5.0 (compatible; EyeGuard/1.0)",
+        "Accept":        "application/json",
+    }
+    payload = {
+        "model":       "llama-3.3-70b-versatile",
+        "messages":    [{"role": "user", "content": prompt}],
+        "max_tokens":  300,
+        "temperature": 0.7,
+    }
+
+    # Usar requests (más confiable con Cloudflare)
+    if USAR_REQUESTS:
+        try:
+            resp = req_lib.post(
+                GROQ_API_URL,
+                headers=headers,
+                json=payload,
+                timeout=15,
+            )
+            if resp.status_code == 200:
+                print("[Groq] Respuesta OK")
+                return resp.json()["choices"][0]["message"]["content"].strip()
+            else:
+                print(f"[Groq] HTTPError {resp.status_code}: {resp.text}")
+                return None
+        except Exception as e:
+            print(f"[Groq] Error con requests: {e}")
+            return None
+
+    # Fallback: urllib
+    body = json.dumps(payload).encode("utf-8")
+    req  = urllib.request.Request(
+        GROQ_API_URL, data=body, headers=headers, method="POST"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            data = json.loads(r.read().decode("utf-8"))
+            print("[Groq] Respuesta OK (urllib)")
+            return data["choices"][0]["message"]["content"].strip()
+    except urllib.error.HTTPError as e:
+        print(f"[Groq] HTTPError {e.code}: {e.read().decode('utf-8')}")
+        return None
+    except Exception as e:
+        print(f"[Groq] Error urllib: {e}")
+        return None
+
+
+def _build_prompt(usuario_nombre, ear, parpadeos, total_alertas_sesion):
+    """Construye el prompt para Gemini con el contexto del usuario."""
+    return (
+        "Eres un asistente médico especialista en salud visual. "
+        f"El usuario '{usuario_nombre}' lleva trabajando frente a la pantalla "
+        "y su sistema de monitoreo detectó lo siguiente:\n"
+        f"- EAR (Eye Aspect Ratio) promedio: {ear:.3f} "
+        "(valores menores a 0.25 indican ojos casi cerrados)\n"
+        f"- Parpadeos por minuto: {parpadeos} "
+        "(lo normal es entre 12 y 20; más de 20 indica fatiga o irritación)\n"
+        f"- Número de alertas de fatiga en esta sesión: {total_alertas_sesion}\n\n"
+        "Con base en estos datos, proporciona:\n"
+        "1. Un diagnóstico breve de la condición visual actual.\n"
+        "2. Una recomendación concreta e inmediata (qué hacer ahora).\n"
+        "3. Si los síntomas son preocupantes, indica si debe consultar a un médico.\n\n"
+        "Responde en español, de forma clara y en máximo 3 párrafos cortos. "
+        "No uses markdown, solo texto plano."
+    )
+
+
+def _get_usuario_avanzado(request):
+    """Helper: valida sesión y retorna (usuario, None) o (None, redirect)."""
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
-        return redirect('inicio')
-    usuario = Usuario.objects.get(pk=usuario_id)
-    return render(request, 'dashboard_avanzado.html', {'usuario': usuario})
+        return None, redirect('inicio')
+    try:
+        return Usuario.objects.get(pk=usuario_id), None
+    except Usuario.DoesNotExist:
+        request.session.flush()
+        return None, redirect('inicio')
+
+
+# ─────────────────────────────────────────────────────────────
+# DASHBOARD AVANZADO — vista principal
+# ─────────────────────────────────────────────────────────────
+def dashboard_avanzado(request):
+    usuario, err = _get_usuario_avanzado(request)
+    if err:
+        return err
+
+    # Obtener o crear sesión avanzada activa
+    sesion = SesionAvanzada.objects.filter(usuario=usuario, activa=True).first()
+
+    # Historial de alertas avanzadas de la sesión actual
+    alertas_sesion = []
+    if sesion:
+        alertas_sesion = HistorialAlerta.objects.filter(
+            usuario=usuario,
+            tipo='avanzado',
+            creado_en__gte=sesion.inicio,
+        ).order_by('-creado_en')[:20]
+
+    # Últimas recomendaciones IA (para el panel de recomendaciones)
+    recomendaciones = HistorialAlerta.objects.filter(
+        usuario=usuario,
+        tipo='avanzado',
+    ).exclude(recomendacion_ia='').order_by('-creado_en')[:5]
+
+    # Estadísticas globales del usuario en modo avanzado
+    total_sesiones  = SesionAvanzada.objects.filter(usuario=usuario).count()
+    total_alertas   = HistorialAlerta.objects.filter(usuario=usuario, tipo='avanzado').count()
+
+    return render(request, 'dashboard_avanzado.html', {
+        'usuario':         usuario,
+        'sesion':          sesion,
+        'alertas_sesion':  alertas_sesion,
+        'recomendaciones': recomendaciones,
+        'total_sesiones':  total_sesiones,
+        'total_alertas':   total_alertas,
+        'gemini_key_ok':   bool(usuario.gemini_api_key),
+    })
+
+
+# ─────────────────────────────────────────────────────────────
+# GUARDAR API KEY DE GEMINI (POST desde el dashboard)
+# ─────────────────────────────────────────────────────────────
+def guardar_api_key(request):
+    if request.method == 'POST':
+        usuario, err = _get_usuario_avanzado(request)
+        if err:
+            return err
+        key = request.POST.get('gemini_api_key', '').strip()
+        if key:
+            # Guardar en BD para que persista entre sesiones
+            usuario.gemini_api_key = key
+            usuario.save(update_fields=['gemini_api_key'])
+    return redirect('dashboard_avanzado')
+
+
+# ─────────────────────────────────────────────────────────────
+# INICIAR SESIÓN AVANZADA
+# ─────────────────────────────────────────────────────────────
+def iniciar_sesion_avanzada(request):
+    if request.method != 'POST':
+        return redirect('dashboard_avanzado')
+
+    usuario, err = _get_usuario_avanzado(request)
+    if err:
+        return err
+
+    # Cerrar sesión activa anterior si existe
+    SesionAvanzada.objects.filter(usuario=usuario, activa=True).update(activa=False)
+
+    # Crear nueva sesión
+    SesionAvanzada.objects.create(usuario=usuario)
+    return redirect('dashboard_avanzado')
+
+
+# ─────────────────────────────────────────────────────────────
+# DETENER SESIÓN AVANZADA
+# ─────────────────────────────────────────────────────────────
+def detener_sesion_avanzada(request):
+    if request.method != 'POST':
+        return redirect('dashboard_avanzado')
+
+    usuario, err = _get_usuario_avanzado(request)
+    if err:
+        return err
+
+    sesion = SesionAvanzada.objects.filter(usuario=usuario, activa=True).first()
+    if sesion:
+        sesion.fin    = timezone.now()
+        sesion.activa = False
+        # Calcular promedios de la sesión
+        alertas = HistorialAlerta.objects.filter(
+            usuario=usuario, tipo='avanzado', creado_en__gte=sesion.inicio
+        )
+        ears = [a.ear_valor for a in alertas if a.ear_valor is not None]
+        parps = [a.parpadeos_minuto for a in alertas if a.parpadeos_minuto is not None]
+        sesion.total_alertas      = alertas.count()
+        sesion.ear_promedio       = round(sum(ears) / len(ears), 3) if ears else None
+        sesion.parpadeos_promedio = round(sum(parps) / len(parps), 1) if parps else None
+        sesion.save()
+
+    return redirect('dashboard_avanzado')
+
+
+# ─────────────────────────────────────────────────────────────
+# RECIBIR ALERTA DE FATIGA (fetch desde JS con datos de MediaPipe)
+# ─────────────────────────────────────────────────────────────
+@csrf_exempt
+def registrar_fatiga(request):
+    """
+    Recibe via fetch (POST JSON) los datos de fatiga detectados por MediaPipe.
+    Llama a Gemini, guarda la alerta en BD y devuelve la recomendación como JSON.
+    """
+    if request.method != 'POST':
+        return _json_error('Método no permitido', 405)
+
+    usuario, err = _get_usuario_avanzado(request)
+    if err:
+        return _json_error('Sesión inválida', 401)
+
+    # Parsear datos enviados por JS
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return _json_error('JSON inválido', 400)
+
+    ear         = float(data.get('ear', 0))
+    parpadeos   = int(data.get('parpadeos_por_minuto', 0))
+    motivo      = data.get('motivo', 'EAR bajo + parpadeo excesivo')
+
+    # Sesión activa
+    sesion = SesionAvanzada.objects.filter(usuario=usuario, activa=True).first()
+    total_alertas_sesion = 0
+    if sesion:
+        total_alertas_sesion = HistorialAlerta.objects.filter(
+            usuario=usuario, tipo='avanzado', creado_en__gte=sesion.inicio
+        ).count()
+
+    # Llamar a Gemini
+    api_key = usuario.gemini_api_key or ''
+    recomendacion = ''
+    if api_key:
+        prompt        = _build_prompt(usuario.nombre, ear, parpadeos, total_alertas_sesion + 1)
+        recomendacion = _llamar_groq(api_key, prompt)
+        if not recomendacion:
+            recomendacion = (
+                'No se pudo conectar con Gemini. '
+                'Verifica que tu API Key sea válida y tengas conexión a internet.'
+            )
+    else:
+        recomendacion = 'No hay API Key de Groq configurada. Ingresa tu clave en el banner amarillo.'
+
+    # Guardar en BD
+    alerta = HistorialAlerta.objects.create(
+        usuario          = usuario,
+        protocolo        = 'Detección de fatiga visual',
+        mensaje          = motivo,
+        tipo             = 'avanzado',
+        completada       = False,
+        ear_valor        = round(ear, 3),
+        parpadeos_minuto = parpadeos,
+        recomendacion_ia = recomendacion,
+    )
+
+    # Actualizar contador de sesión
+    if sesion:
+        sesion.total_alertas = total_alertas_sesion + 1
+        sesion.save(update_fields=['total_alertas'])
+
+    return JsonResponse({
+        'ok':             True,
+        'alerta_id':      alerta.pk,
+        'recomendacion':  recomendacion,
+        'ear':            ear,
+        'parpadeos':      parpadeos,
+        'hora':           alerta.creado_en.strftime('%H:%M'),
+    })
+
+
+# ─────────────────────────────────────────────────────────────
+# HISTORIAL AVANZADO
+# ─────────────────────────────────────────────────────────────
+def historial_avanzado(request):
+    usuario, err = _get_usuario_avanzado(request)
+    if err:
+        return err
+
+    if request.method == 'POST' and request.POST.get('action') == 'limpiar':
+        HistorialAlerta.objects.filter(usuario=usuario, tipo='avanzado').delete()
+        return redirect('historial_avanzado')
+
+    alertas = HistorialAlerta.objects.filter(usuario=usuario, tipo='avanzado')
+    total   = alertas.count()
+    con_recomendacion = alertas.exclude(recomendacion_ia='').count()
+
+    return render(request, 'historial_avanzado.html', {
+        'usuario':           usuario,
+        'alertas':           alertas,
+        'total':             total,
+        'con_recomendacion': con_recomendacion,
+    })
+
+
+# ─────────────────────────────────────────────────────────────
+# HELPER: respuesta JSON de error
+# ─────────────────────────────────────────────────────────────
+def _json_error(msg, status=400):
+    return JsonResponse({'ok': False, 'error': msg}, status=status)

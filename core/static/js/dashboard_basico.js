@@ -15,37 +15,56 @@ document.addEventListener('DOMContentLoaded', () => {
   function startCountdown(panel, clockId, barId, nextId, formId) {
     if (!panel) return;
 
-    const totalMin  = parseInt(panel.dataset.interval);  // minutos
-    const durMin    = parseInt(panel.dataset.duracion);   // minutos de descanso
-    const mensaje   = panel.dataset.mensaje || '¡Hora de descansar!';
-    const pid       = panel.dataset.pid || '';
-    const totalSec  = totalMin * 60;
-    let   remaining = totalSec;
+    const totalMin = parseInt(panel.dataset.interval);
+    const durMin   = parseInt(panel.dataset.duracion);
+    const mensaje  = panel.dataset.mensaje || '¡Hora de descansar!';
+    const pid      = panel.dataset.pid || '';
+    const totalSec = totalMin * 60;
 
     const clock = document.getElementById(clockId);
     const bar   = document.getElementById(barId);
     const next  = document.getElementById(nextId);
 
+    // Usar timestamp para que funcione aunque la pestaña esté oculta
+    let inicioMs  = Date.now();
+    let handle    = null;
+    let disparado = false;
+
     function tick() {
-      remaining--;
+      const transcurrido = Math.floor((Date.now() - inicioMs) / 1000);
+      const remaining    = Math.max(totalSec - transcurrido, 0);
+
       if (clock) clock.textContent = formatTime(remaining);
       if (bar)   bar.style.width   = ((remaining / totalSec) * 100) + '%';
       if (next)  next.textContent  = 'Próxima alerta en ' + formatTime(remaining);
 
-      if (remaining <= 0) {
+      if (remaining <= 0 && !disparado) {
+        disparado = true;
         clearInterval(handle);
-        // Registrar en BD vía fetch (sin recargar la página)
         registrarAlerta(formId, pid);
-        // Mostrar modal de descanso
+        // Notificación nativa del SO
+        EyeGuardNotif.alertaDescanso(
+          panel.dataset.nombre || 'Alerta de descanso',
+          mensaje
+        );
         showModal(mensaje, durMin * 60, () => {
-          // Al cerrar el modal, reiniciar el countdown
-          remaining = totalSec;
-          handle = setInterval(tick, 1000);
+          // Reiniciar con nuevo timestamp
+          inicioMs  = Date.now();
+          disparado = false;
+          handle    = setInterval(tick, 500);
         });
       }
     }
 
-    let handle = setInterval(tick, 1000);
+    // Cada 500ms para más precisión
+    handle = setInterval(tick, 500);
+
+    // Al volver a la pestaña, forzar actualización inmediata
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        tick();
+      }
+    });
   }
 
   // Iniciar countdown del timer activo si existe
@@ -62,13 +81,21 @@ document.addEventListener('DOMContentLoaded', () => {
   function registrarAlerta(formId, pid) {
     const form = document.getElementById(formId);
     if (!form) return;
+
     // Asignar pid al input oculto si existe
     const hiddenPid = document.getElementById('hiddenPid');
     if (hiddenPid && pid) hiddenPid.value = pid;
 
+    // Leer la URL del atributo HTML directamente (evita que el navegador
+    // resuelva form.action como un elemento del form en lugar de la URL)
+    const url  = form.getAttribute('action');
     const data = new FormData(form);
-    fetch(form.action, { method: 'POST', body: data, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-      .catch(() => {}); // fallo silencioso, no interrumpe la UX
+
+    fetch(url, {
+      method:  'POST',
+      body:    data,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    }).catch(() => {});
   }
 
   /* ──────────────────────────────────────────

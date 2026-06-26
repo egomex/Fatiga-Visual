@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EyeGuard — Historial Avanzado</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{% static 'css/dashboard_avanzado.css' %}"/>
+</head>
+<body>
+  <div class="orb orb-1"></div><div class="orb orb-2"></div>
+  <div class="grid-overlay"></div>
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="eye-mini">
+        <svg viewBox="0 0 34 34" fill="none">
+          <ellipse cx="17" cy="17" rx="14" ry="9" stroke="#818cf8" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="17" cy="17" r="4.5" fill="#818cf8" opacity=".9"/>
+          <circle cx="18.5" cy="15.5" r="1.4" fill="white" opacity=".6"/>
+        </svg>
+      </div>
+      <span class="topbar-brand">EyeGuard</span>
+      <span class="topbar-badge">Modo Avanzado</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-user">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        {{ usuario.nombre }}
+      </span>
+      <a href="{% url 'salir' %}" class="btn-exit">Salir</a>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="section-header">
+      <a href="{% url 'dashboard_avanzado' %}" class="btn-back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Volver
+      </a>
+      <div>
+        <h2 class="section-title">Historial <span class="c-violet">avanzado</span></h2>
+        <p class="section-sub">Todas las alertas de fatiga y recomendaciones de IA.</p>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row-adv">
+      <div class="stat-box-adv">
+        <span class="stat-num-adv">{{ total }}</span>
+        <span class="stat-label-adv">Total alertas</span>
+      </div>
+      <div class="stat-box-adv">
+        <span class="stat-num-adv violet">{{ con_recomendacion }}</span>
+        <span class="stat-label-adv">Con recomendación IA</span>
+      </div>
+    </div>
+
+    <!-- Limpiar -->
+    <div class="hist-filters">
+      <form method="POST" style="margin:0">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="limpiar"/>
+        <button type="submit" class="filter-btn danger"
+                onclick="return confirm('¿Eliminar todo el historial avanzado?')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          Limpiar historial
+        </button>
+      </form>
+    </div>
+
+    <!-- Lista expandida con recomendaciones -->
+    <div class="hist-list-adv">
+      {% if alertas %}
+        {% for alerta in alertas %}
+        <div class="hist-item-full">
+          <div class="hist-item-full-header">
+            <div class="hist-item-left">
+              <span class="hist-dot-adv"></span>
+              <div>
+                <div class="hist-item-name">{{ alerta.protocolo }}</div>
+                <div class="hist-item-msg">{{ alerta.mensaje }}</div>
+              </div>
+            </div>
+            <div class="hist-item-right">
+              <span class="hist-item-time">{{ alerta.creado_en|date:"H:i · d/m/Y" }}</span>
+              <span class="ear-chip">EAR {{ alerta.ear_valor }}</span>
+              <span class="parp-chip">{{ alerta.parpadeos_minuto }} parp/min</span>
+            </div>
+          </div>
+          {% if alerta.recomendacion_ia %}
+          <div class="hist-ia-block">
+            <span class="ia-badge sm">Gemini</span>
+            <p class="hist-ia-text">{{ alerta.recomendacion_ia }}</p>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="hist-empty">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#6b85a8" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <p>Aún no hay alertas registradas en modo avanzado.</p>
+        </div>
+      {% endif %}
+    </div>
+  </main>
+</body>
+</html>
