@@ -7,6 +7,9 @@
   <title>EyeGuard — Historial Avanzado</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="{% static 'css/dashboard_avanzado.css' %}"/>
+  <link rel="manifest" href="/static/manifest.json"/>
+  <meta name="theme-color" content="#38bdf8"/>
+  <link rel="apple-touch-icon" href="/static/img/icon-192.png"/>
 </head>
 <body>
   <div class="orb orb-1"></div><div class="orb orb-2"></div>
@@ -70,6 +73,29 @@
       </form>
     </div>
 
+    <!-- ── GRÁFICAS DE FATIGA ── -->
+    {% if alertas %}
+    <div class="charts-grid">
+
+      <div class="card chart-card-hist">
+        <div class="card-header">
+          <h3>Momentos con más fatiga</h3>
+          <span class="chart-sub">Alertas por hora del día</span>
+        </div>
+        <canvas id="chartHoras" height="160"></canvas>
+      </div>
+
+      <div class="card chart-card-hist">
+        <div class="card-header">
+          <h3>Evolución del EAR</h3>
+          <span class="chart-sub">Valor EAR en cada alerta detectada</span>
+        </div>
+        <canvas id="chartEAR" height="160"></canvas>
+      </div>
+
+    </div>
+    {% endif %}
+
     <!-- Lista expandida con recomendaciones -->
     <div class="hist-list-adv">
       {% if alertas %}
@@ -105,5 +131,96 @@
       {% endif %}
     </div>
   </main>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // ── Gráfica 1: Alertas por hora del día ──
+    const horasLabels = {{ horas_labels|default:"[]"|safe }};
+    const horasData   = {{ horas_data|default:"[]"|safe }};
+
+    const ctxHoras = document.getElementById('chartHoras')?.getContext('2d');
+    if (ctxHoras) {
+      new Chart(ctxHoras, {
+        type: 'bar',
+        data: {
+          labels: horasLabels,
+          datasets: [{
+            label: 'Alertas',
+            data: horasData,
+            backgroundColor: 'rgba(129,140,248,.45)',
+            borderColor: '#818cf8',
+            borderWidth: 1.5,
+            borderRadius: 5,
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.parsed.y} alerta${ctx.parsed.y !== 1 ? 's' : ''}`
+              }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#6b85a8', font: { size: 11 } } },
+            y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,.05)' },
+                 ticks: { color: '#6b85a8', font: { size: 11 }, stepSize: 1 } }
+          }
+        }
+      });
+    }
+
+    // ── Gráfica 2: EAR por alerta (evolución de fatiga) ──
+    const earLabels = {{ ear_labels|default:"[]"|safe }};
+    const earData   = {{ ear_data|default:"[]"|safe }};
+
+    const ctxEAR = document.getElementById('chartEAR')?.getContext('2d');
+    if (ctxEAR) {
+      new Chart(ctxEAR, {
+        type: 'line',
+        data: {
+          labels: earLabels,
+          datasets: [
+            {
+              label: 'EAR detectado',
+              data: earData,
+              borderColor: '#f87171',
+              backgroundColor: 'rgba(248,113,113,.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              pointRadius: 4,
+              pointBackgroundColor: '#f87171',
+              fill: true,
+            },
+            {
+              label: 'Umbral (0.30)',
+              data: earLabels.map(() => 0.30),
+              borderColor: '#818cf8',
+              borderWidth: 1.5,
+              borderDash: [6, 3],
+              pointRadius: 0,
+              fill: false,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: true,
+              labels: { color: '#6b85a8', font: { size: 11 }, boxWidth: 14 }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#6b85a8', font: { size: 10 },
+                 maxTicksLimit: 10 } },
+            y: { min: 0, max: 0.5, grid: { color: 'rgba(255,255,255,.05)' },
+                 ticks: { color: '#6b85a8', font: { size: 11 } } }
+          }
+        }
+      });
+    }
+  </script>
 </body>
 </html>
