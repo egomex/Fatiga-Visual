@@ -9,9 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
      CONFIGURACIÓN DE DETECCIÓN
   ───────────────────────────────────── */
   const EAR_UMBRAL      = 0.30;   // EAR < 0.30 = ojos entrecerrados (más sensible)
-  const EAR_FRAMES_MIN  = 48;     // ~0.5 seg a 30fps
-  const BLINK_UMBRAL    = 20;      // 3 parpadeos acumulados ya dispara
-  const COOLDOWN_MS     = 30000;  // 15 seg entre alertas
+  const EAR_FRAMES_MIN  = 15;     // ~0.5 seg a 30fps
+  const BLINK_UMBRAL    = 3;      // 3 parpadeos acumulados ya dispara
+  const COOLDOWN_MS     = 15000;  // 15 seg entre alertas
 
   // Índices MediaPipe Face Mesh para EAR
   // Ojo izquierdo: puntos verticales y horizontal
@@ -74,15 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
   ───────────────────────────────────── */
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-      // Reiniciar contadores de detección
-      earFramesBajo  = 0;
-      ojoCerradoPrev = false;
-      console.log('[EyeGuard] Ventana activa — detección reiniciada.');
+      console.log('[EyeGuard] Ventana activa — detección continúa.');
     } else {
-      // Página oculta — pausar detección para no acumular frames falsos
-      earFramesBajo  = 0;
-      ojoCerradoPrev = false;
-      console.log('[EyeGuard] Ventana oculta — detección pausada.');
+      console.log('[EyeGuard] Ventana oculta — MediaPipe sigue en segundo plano.');
     }
   });
 
@@ -200,11 +194,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (cameraOverlay) cameraOverlay.classList.add('hidden');
 
-    // Verificar que FaceMesh esté disponible
     if (typeof FaceMesh === 'undefined') {
       console.error('MediaPipe FaceMesh no cargó correctamente.');
       return;
     }
+
+    // Función async para poder usar await con getUserMedia
+    (async () => {
 
     const faceMesh = new FaceMesh({
       locateFile: (file) =>
@@ -285,38 +281,31 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Iniciar cámara
-    const camera = new Camera(videoEl, {
-      onFrame: async () => {
-        await faceMesh.send({ image: videoEl });
-      },
-      width: 640, height: 480,
+    // Iniciar cámara SIN onFrame — el setInterval lo maneja todo
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 480, facingMode: 'user' }
     });
+    videoEl.srcObject = stream;
+    await new Promise(resolve => videoEl.onloadedmetadata = resolve);
+    videoEl.play();
 
-    camera.start().catch(err => {
-      console.error('Error al iniciar cámara:', err);
-    });
-
-    // Mantener MediaPipe activo aunque la pestaña esté oculta
-    // usando setInterval que no se throttlea como requestAnimationFrame
+    // Loop principal con setInterval — funciona visible u oculto
+    // sin throttling del navegador
     let procesandoFrame = false;
     setInterval(async () => {
-      // Solo procesar si el video tiene datos y no estamos ya procesando
-      if (
-        document.visibilityState === 'hidden' &&
-        videoEl.readyState === 4 &&
-        !procesandoFrame
-      ) {
+      if (videoEl.readyState >= 2 && !procesandoFrame) {
         procesandoFrame = true;
         try {
           await faceMesh.send({ image: videoEl });
         } catch (e) {
-          // silencioso
+          console.error('[EyeGuard] Error MediaPipe:', e);
         } finally {
           procesandoFrame = false;
         }
       }
-    }, 100); // cada 100ms = ~10fps en segundo plano
+    }, 80); // ~12fps constante siempre
+
+    })(); // fin función async
   }
 
   /* ─────────────────────────────────────
