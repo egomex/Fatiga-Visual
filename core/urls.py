@@ -20,4 +20,5 @@ urlpatterns = [
     path('dashboard/avanzado/detener/',       views.detener_sesion_avanzada, name='detener_sesion_avanzada'),
     path('dashboard/avanzado/fatiga/',        views.registrar_fatiga,        name='registrar_fatiga'),
     path('dashboard/avanzado/historial/',     views.historial_avanzado,      name='historial_avanzado'),
+    path('api/notificaciones-pendientes/', views.notificaciones_pendientes, name='notificaciones_pendientes'),
 ]

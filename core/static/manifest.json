@@ -1,0 +1,36 @@
+{
+  "name": "EyeGuard — Protección Visual",
+  "short_name": "EyeGuard",
+  "description": "Sistema inteligente de detección y prevención de fatiga visual",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050d1a",
+  "theme_color": "#38bdf8",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Modo Básico",
+      "url": "/dashboard/basico/",
+      "description": "Ir al modo básico"
+    },
+    {
+      "name": "Modo Avanzado",
+      "url": "/dashboard/avanzado/",
+      "description": "Ir al modo avanzado"
+    }
+  ]
+}
