@@ -377,3 +377,82 @@ input[type="text"]:focus { border-color:var(--accent2);box-shadow:0 0 0 3px rgba
   .stats-row { grid-template-columns:1fr 1fr; }
   .topbar    { padding:0 16px; }
 }
+
+/* ── Proto active note ── */
+.proto-active-note {
+  font-size: .78rem; color: var(--warn);
+  background: rgba(251,191,36,.07);
+  border: 1px solid rgba(251,191,36,.2);
+  border-radius: 8px; padding: 10px 14px;
+  text-align: center;
+}
+
+/* ── hist-item badge completada ── */
+.badge-completada {
+  background: rgba(52,211,153,.12);
+  color: var(--green);
+  font-size: .65rem; font-weight: 700;
+  padding: 3px 8px; border-radius: 20px;
+}
+
+/* ── btn-activate-sm disabled ── */
+.btn-activate-sm.disabled {
+  opacity: .35; cursor: not-allowed;
+  background: var(--surface); color: var(--muted);
+  padding: 7px 14px; border-radius: 8px; border: none;
+  font-family: 'Syne', sans-serif; font-size: .74rem; font-weight: 700;
+}
+
+/* ── filter-btn como <a> ── */
+a.filter-btn {
+  text-decoration: none;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+
+/* ── Input numérico configurable ── */
+.number-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.number-input-wrap input[type="number"] {
+  width: 100%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 52px 12px 16px;
+  font-family: 'Syne', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent2);
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  -moz-appearance: textfield;
+}
+.number-input-wrap input[type="number"]::-webkit-outer-spin-button,
+.number-input-wrap input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.number-input-wrap input[type="number"]:focus {
+  border-color: var(--accent2);
+  box-shadow: 0 0 0 3px rgba(129,140,248,.12);
+}
+.number-input-wrap input[type="number"].input-error {
+  border-color: #f87171;
+  box-shadow: 0 0 0 3px rgba(248,113,113,.12);
+}
+.number-unit {
+  position: absolute;
+  right: 14px;
+  font-size: .82rem;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  pointer-events: none;
+}
+.number-hint {
+  font-size: .74rem;
+  color: #f87171;
+  min-height: 16px;
+  margin-top: 2px;
+}

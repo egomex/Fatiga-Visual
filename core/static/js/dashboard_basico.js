@@ -82,12 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById(formId);
     if (!form) return;
 
-    // Asignar pid al input oculto si existe
     const hiddenPid = document.getElementById('hiddenPid');
     if (hiddenPid && pid) hiddenPid.value = pid;
 
-    // Leer la URL del atributo HTML directamente (evita que el navegador
-    // resuelva form.action como un elemento del form en lugar de la URL)
     const url  = form.getAttribute('action');
     const data = new FormData(form);
 
@@ -95,7 +92,13 @@ document.addEventListener('DOMContentLoaded', () => {
       method:  'POST',
       body:    data,
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
-    }).catch(() => {});
+    })
+    .then(r => r.json())
+    .then(data => {
+      // Guardar el ID para marcarlo como completado al cerrar el modal
+      if (data.alerta_id) ultimaAlertaId = data.alerta_id;
+    })
+    .catch(() => {});
   }
 
   /* ──────────────────────────────────────────
@@ -131,14 +134,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
   }
 
+  // ID de la última alerta registrada (se actualiza al registrar)
+  let ultimaAlertaId = null;
+
   function closeModal() {
     clearInterval(modalHandle);
     const modal = document.getElementById('alertModal');
     if (modal) modal.classList.add('hidden');
+
+    // Marcar como completada en la BD
+    marcarCompletada();
+
     if (typeof modalCallback === 'function') {
       modalCallback();
       modalCallback = null;
     }
+  }
+
+  function marcarCompletada() {
+    if (!ultimaAlertaId) return;
+
+    // Obtener CSRF del form existente
+    const form = document.getElementById('formAlertaDisparada');
+    if (!form) return;
+    const csrfInput = form.querySelector('[name=csrfmiddlewaretoken]');
+    if (!csrfInput) return;
+
+    const url  = form.getAttribute('action');
+    const data = new FormData();
+    data.append('csrfmiddlewaretoken', csrfInput.value);
+    data.append('action', 'completar');         // ← action correcto
+    data.append('alerta_id', ultimaAlertaId);
+
+    fetch(url, {
+      method:  'POST',
+      body:    data,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    })
+    .then(() => { ultimaAlertaId = null; })
+    .catch(() => {});
   }
 
   window.dismissAlert = closeModal;
@@ -147,18 +181,44 @@ document.addEventListener('DOMContentLoaded', () => {
      SLIDERS — actualizar valores y preview
   ────────────────────────────────────────── */
   window.updateRange = (type) => {
+    updateCycleBar();
+  };
+
+  window.updateNumberInput = (type) => {
     if (type === 'work') {
-      const val = document.getElementById('workRange')?.value;
-      const el  = document.getElementById('workVal');
-      const pv  = document.getElementById('prev-work');
-      if (el) el.textContent = val + ' min';
-      if (pv) pv.textContent = val + ' min';
+      const input = document.getElementById('workRange');
+      const hint  = document.getElementById('workHint');
+      const pv    = document.getElementById('prev-work');
+      const val   = parseInt(input?.value);
+
+      if (isNaN(val) || val < 5) {
+        if (hint) hint.textContent = 'Mínimo 5 minutos.';
+        if (input) input.classList.add('input-error');
+      } else if (val > 120) {
+        if (hint) hint.textContent = 'Máximo 120 minutos.';
+        if (input) input.classList.add('input-error');
+      } else {
+        if (hint) hint.textContent = '';
+        if (input) input.classList.remove('input-error');
+        if (pv) pv.textContent = val + ' min';
+      }
     } else {
-      const val = document.getElementById('breakRange')?.value;
-      const el  = document.getElementById('breakVal');
-      const pv  = document.getElementById('prev-break');
-      if (el) el.textContent = val + ' min';
-      if (pv) pv.textContent = val + ' min';
+      const input = document.getElementById('breakRange');
+      const hint  = document.getElementById('breakHint');
+      const pv    = document.getElementById('prev-break');
+      const val   = parseInt(input?.value);
+
+      if (isNaN(val) || val < 1) {
+        if (hint) hint.textContent = 'Mínimo 1 minuto.';
+        if (input) input.classList.add('input-error');
+      } else if (val > 30) {
+        if (hint) hint.textContent = 'Máximo 30 minutos.';
+        if (input) input.classList.add('input-error');
+      } else {
+        if (hint) hint.textContent = '';
+        if (input) input.classList.remove('input-error');
+        if (pv) pv.textContent = val + ' min';
+      }
     }
     updateCycleBar();
   };
@@ -169,8 +229,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function updateCycleBar() {
-    const work  = parseInt(document.getElementById('workRange')?.value  || 30);
-    const brk   = parseInt(document.getElementById('breakRange')?.value || 5);
+    const workInput = document.getElementById('workRange');
+    const breakInput = document.getElementById('breakRange');
+    const work  = parseInt(workInput?.value  || 30);
+    const brk   = parseInt(breakInput?.value || 5);
     const total = work + brk;
     const wPct  = Math.round((work / total) * 100);
     const bPct  = 100 - wPct;

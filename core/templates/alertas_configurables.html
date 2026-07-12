@@ -7,6 +7,9 @@
   <title>EyeGuard — Alertas configurables</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="{% static 'css/dashboard_basico.css' %}"/>
+  <link rel="manifest" href="/static/manifest.json"/>
+  <meta name="theme-color" content="#38bdf8"/>
+  <link rel="apple-touch-icon" href="/static/img/icon-192.png"/>
 </head>
 <body>
   <div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
@@ -37,27 +40,29 @@
           <input type="hidden" name="action" value="activar"/>
 
           <div class="config-field">
-            <div class="config-field-header">
-              <label for="intervalo_trabajo">Tiempo de trabajo</label>
-              <span class="config-value" id="workVal">{{ config.intervalo_trabajo }} min</span>
+            <label for="intervalo_trabajo">Tiempo de trabajo <span class="label-opt">(5 – 120 min)</span></label>
+            <div class="number-input-wrap">
+              <input type="number" id="workRange" name="intervalo_trabajo"
+                     min="5" max="120"
+                     value="{{ config.intervalo_trabajo }}"
+                     placeholder="Ej: 30"
+                     oninput="updateNumberInput('work')"/>
+              <span class="number-unit">min</span>
             </div>
-            <input type="range" id="workRange" name="intervalo_trabajo"
-                   min="5" max="120" step="5"
-                   value="{{ config.intervalo_trabajo }}"
-                   oninput="updateRange('work')"/>
-            <div class="range-labels"><span>5 min</span><span>120 min</span></div>
+            <div class="number-hint" id="workHint"></div>
           </div>
 
           <div class="config-field">
-            <div class="config-field-header">
-              <label for="duracion_descanso">Duración del descanso</label>
-              <span class="config-value" id="breakVal">{{ config.duracion_descanso }} min</span>
+            <label for="duracion_descanso">Duración del descanso <span class="label-opt">(1 – 30 min)</span></label>
+            <div class="number-input-wrap">
+              <input type="number" id="breakRange" name="duracion_descanso"
+                     min="1" max="30"
+                     value="{{ config.duracion_descanso }}"
+                     placeholder="Ej: 5"
+                     oninput="updateNumberInput('break')"/>
+              <span class="number-unit">min</span>
             </div>
-            <input type="range" id="breakRange" name="duracion_descanso"
-                   min="1" max="30" step="1"
-                   value="{{ config.duracion_descanso }}"
-                   oninput="updateRange('break')"/>
-            <div class="range-labels"><span>1 min</span><span>30 min</span></div>
+            <div class="number-hint" id="breakHint"></div>
           </div>
 
           <div class="config-field">

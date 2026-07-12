@@ -190,13 +190,15 @@ def alertas_predeterminadas(request):
             pid = request.POST.get('protocolo_id')
             protocolo = _get_protocolo(pid)
             if protocolo:
-                HistorialAlerta.objects.create(
+                alerta = HistorialAlerta.objects.create(
                     usuario   = usuario,
                     protocolo = protocolo['nombre'],
                     mensaje   = protocolo['mensaje'],
                     tipo      = 'preset',
                     completada= False,
                 )
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'ok': True, 'alerta_id': alerta.pk})
 
         elif action == 'completar':
             alerta_id = request.POST.get('alerta_id')
@@ -204,6 +206,8 @@ def alertas_predeterminadas(request):
                 HistorialAlerta.objects.filter(
                     pk=alerta_id, usuario=usuario
                 ).update(completada=True)
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'ok': True})
 
         elif action == 'detener':
             pid = request.session.get('protocolo_activo', {}).get('id')
@@ -269,13 +273,15 @@ def alertas_configurables(request):
 
         elif action == 'alerta_disparada':
             cfg = request.session.get('config_activa', {})
-            HistorialAlerta.objects.create(
+            alerta = HistorialAlerta.objects.create(
                 usuario   = usuario,
                 protocolo = f"Personalizado ({cfg.get('intervalo', '?')} min)",
                 mensaje   = cfg.get('mensaje', '¡Hora de descansar!'),
                 tipo      = 'custom',
                 completada= False,
             )
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'ok': True, 'alerta_id': alerta.pk})
 
         elif action == 'completar':
             alerta_id = request.POST.get('alerta_id')
@@ -283,6 +289,8 @@ def alertas_configurables(request):
                 HistorialAlerta.objects.filter(
                     pk=alerta_id, usuario=usuario
                 ).update(completada=True)
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'ok': True})
 
         elif action == 'detener':
             cfg = request.session.get('config_activa')
@@ -373,7 +381,7 @@ def _llamar_groq(api_key, prompt):
     payload = {
         "model":       "llama-3.3-70b-versatile",
         "messages":    [{"role": "user", "content": prompt}],
-        "max_tokens":  300,
+        "max_tokens":  150,
         "temperature": 0.7,
     }
 
@@ -420,7 +428,7 @@ def _build_prompt(usuario_nombre, ear, parpadeos, total_alertas_sesion):
         "2. Una recomendación concreta e inmediata (qué hacer ahora).\n"
         "3. Si los síntomas son preocupantes, indica si debe consultar a un médico.\n\n"
         "Responde en español, de forma clara y en máximo 3 párrafos cortos. "
-        "No uses markdown, solo texto plano."
+        "Responde en máximo 4 oraciones cortas y directas. No uses markdown, solo texto plano."
     )
 
 
@@ -605,22 +613,32 @@ def historial_avanzado(request):
     total             = alertas.count()
     con_recomendacion = alertas.exclude(recomendacion_ia='').count()
 
-    # ── Datos para gráfica 1: alertas por hora del día ──
+    # ── Datos para gráfica 1: alertas agrupadas por día de semana + hora ──
     try:
-        conteo_horas = {h: 0 for h in range(24)}
+        DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+        conteo_dia_hora = {}
         for alerta in alertas:
             try:
-                hora = alerta.creado_en.hour  # usar hora directa sin astimezone
+                dia  = DIAS[alerta.creado_en.weekday()]
+                hora = alerta.creado_en.hour
+                key  = f"{dia} {hora:02d}:00"
             except Exception:
-                hora = 0
-            conteo_horas[hora] = conteo_horas.get(hora, 0) + 1
+                continue
+            conteo_dia_hora[key] = conteo_dia_hora.get(key, 0) + 1
 
-        horas_activas = [h for h in range(24) if conteo_horas[h] > 0 or (7 <= h <= 22)]
-        horas_labels  = json.dumps([f"{h:02d}:00" for h in horas_activas])
-        horas_data    = json.dumps([conteo_horas[h] for h in horas_activas])
+        # Ordenar por día de semana y hora
+        def sort_key(k):
+            partes = k.split()
+            dia_idx = DIAS.index(partes[0]) if partes[0] in DIAS else 7
+            hora_val = int(partes[1].split(':')[0]) if len(partes) > 1 else 0
+            return (dia_idx, hora_val)
+
+        claves_ordenadas = sorted(conteo_dia_hora.keys(), key=sort_key)
+        horas_labels = json.dumps(claves_ordenadas)
+        horas_data   = json.dumps([conteo_dia_hora[k] for k in claves_ordenadas])
     except Exception:
-        horas_labels = json.dumps([f"{h:02d}:00" for h in range(7, 23)])
-        horas_data   = json.dumps([0] * 16)
+        horas_labels = json.dumps([])
+        horas_data   = json.dumps([])
 
     # ── Datos para gráfica 2: evolución del EAR ──
     try:

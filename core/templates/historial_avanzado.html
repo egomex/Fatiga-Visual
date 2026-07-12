@@ -7,9 +7,169 @@
   <title>EyeGuard — Historial Avanzado</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="{% static 'css/dashboard_avanzado.css' %}"/>
-  <link rel="manifest" href="/static/manifest.json"/>
-  <meta name="theme-color" content="#38bdf8"/>
-  <link rel="apple-touch-icon" href="/static/img/icon-192.png"/>
+  <style>
+    /* ── Tabla profesional historial avanzado ── */
+    .tabla-wrap-adv {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 14px;
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      box-shadow: 0 8px 32px rgba(0,0,0,.3);
+    }
+    .tabla-adv {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .84rem;
+    }
+    .tabla-adv thead tr {
+      background: linear-gradient(135deg, #0f1f3a 0%, #1a2040 100%);
+      border-bottom: 2px solid rgba(129,140,248,.25);
+    }
+    .tabla-adv thead th {
+      padding: 14px 16px;
+      text-align: left;
+      font-family: 'Syne', sans-serif;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--violet);
+      white-space: nowrap;
+    }
+    .tabla-adv thead th:last-child { text-align: center; }
+    .tabla-adv tbody tr.fila-principal {
+      border-bottom: 1px solid rgba(129,140,248,.07);
+      transition: background .15s;
+      cursor: pointer;
+    }
+    .tabla-adv tbody tr.fila-principal:hover { background: rgba(129,140,248,.04); }
+    .tabla-adv tbody tr.fila-ia {
+      display: none;
+      background: rgba(129,140,248,.04);
+      border-bottom: 1px solid rgba(129,140,248,.07);
+    }
+    .tabla-adv tbody tr.fila-ia.visible { display: table-row; }
+    .tabla-adv tbody td {
+      padding: 13px 16px;
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    .td-num-adv {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: .78rem;
+      color: var(--muted);
+      width: 44px;
+    }
+    .td-fecha-adv {
+      white-space: nowrap;
+      font-size: .8rem;
+      color: var(--muted);
+    }
+    .td-fecha-adv strong {
+      display: block;
+      font-family: 'Syne', sans-serif;
+      font-size: .84rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .td-ear {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: .9rem;
+      color: #f87171;
+    }
+    .td-parp {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: .86rem;
+      color: var(--violet);
+    }
+    .td-expand {
+      text-align: center;
+    }
+    .btn-expand {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--violet);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s, transform .2s;
+    }
+    .btn-expand:hover { background: rgba(129,140,248,.1); }
+    .btn-expand.abierto { transform: rotate(180deg); background: rgba(129,140,248,.15); }
+
+    /* Fila IA expandida */
+    .ia-cell {
+      padding: 0 16px 16px 44px !important;
+    }
+    .ia-block-tabla {
+      background: rgba(129,140,248,.06);
+      border: 1px solid rgba(129,140,248,.15);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .ia-block-label {
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--violet);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ia-block-text {
+      font-size: .83rem;
+      color: #b0c4de;
+      line-height: 1.65;
+    }
+    .no-ia {
+      font-size: .8rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* Sin IA badge */
+    .badge-sin-ia {
+      font-size: .65rem;
+      padding: 3px 8px;
+      border-radius: 20px;
+      background: rgba(107,133,168,.1);
+      color: var(--muted);
+    }
+    .badge-con-ia {
+      font-size: .65rem;
+      padding: 3px 8px;
+      border-radius: 20px;
+      background: rgba(129,140,248,.1);
+      color: var(--violet);
+    }
+
+    /* Tabla footer */
+    .tabla-footer-adv {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      font-size: .78rem;
+      color: var(--muted);
+    }
+    .tabla-empty-adv {
+      padding: 60px 24px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .tabla-empty-adv p { font-size: .88rem; line-height: 1.6; margin-top: 14px; }
+  </style>
 </head>
 <body>
   <div class="orb orb-1"></div><div class="orb orb-2"></div>
@@ -44,7 +204,7 @@
       </a>
       <div>
         <h2 class="section-title">Historial <span class="c-violet">avanzado</span></h2>
-        <p class="section-sub">Todas las alertas de fatiga y recomendaciones de IA.</p>
+        <p class="section-sub">Todas las alertas de fatiga y recomendaciones de IA de {{ usuario.nombre }}.</p>
       </div>
     </div>
 
@@ -73,18 +233,16 @@
       </form>
     </div>
 
-    <!-- ── GRÁFICAS DE FATIGA ── -->
+    <!-- Gráficas -->
     {% if alertas %}
     <div class="charts-grid">
-
       <div class="card chart-card-hist">
         <div class="card-header">
           <h3>Momentos con más fatiga</h3>
-          <span class="chart-sub">Alertas por hora del día</span>
+          <span class="chart-sub">Alertas agrupadas por día y hora</span>
         </div>
         <canvas id="chartHoras" height="160"></canvas>
       </div>
-
       <div class="card chart-card-hist">
         <div class="card-header">
           <h3>Evolución del EAR</h3>
@@ -92,53 +250,123 @@
         </div>
         <canvas id="chartEAR" height="160"></canvas>
       </div>
-
     </div>
     {% endif %}
 
-    <!-- Lista expandida con recomendaciones -->
-    <div class="hist-list-adv">
-      {% if alertas %}
-        {% for alerta in alertas %}
-        <div class="hist-item-full">
-          <div class="hist-item-full-header">
-            <div class="hist-item-left">
-              <span class="hist-dot-adv"></span>
-              <div>
-                <div class="hist-item-name">{{ alerta.protocolo }}</div>
-                <div class="hist-item-msg">{{ alerta.mensaje }}</div>
-              </div>
-            </div>
-            <div class="hist-item-right">
-              <span class="hist-item-time">{{ alerta.creado_en|date:"H:i · d/m/Y" }}</span>
-              <span class="ear-chip">EAR {{ alerta.ear_valor }}</span>
-              <span class="parp-chip">{{ alerta.parpadeos_minuto }} parp/min</span>
-            </div>
-          </div>
-          {% if alerta.recomendacion_ia %}
-          <div class="hist-ia-block">
-            <span class="ia-badge sm">Gemini</span>
-            <p class="hist-ia-text">{{ alerta.recomendacion_ia }}</p>
-          </div>
+    <!-- Tabla profesional -->
+    <div class="tabla-wrap-adv">
+      <table class="tabla-adv">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>EAR detectado</th>
+            <th>Parpadeos/min</th>
+            <th>Motivo</th>
+            <th>IA</th>
+            <th>Ver rec.</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if alertas %}
+            {% for alerta in alertas %}
+            <!-- Fila principal -->
+            <tr class="fila-principal" onclick="toggleIA({{ forloop.counter }})">
+              <td class="td-num-adv">{{ forloop.counter }}</td>
+              <td class="td-fecha-adv">
+                <strong>{{ alerta.creado_en|date:"d/m/Y" }}</strong>
+                {{ alerta.creado_en|date:"l" }}
+              </td>
+              <td class="td-fecha-adv">
+                <strong>{{ alerta.creado_en|date:"H:i" }}</strong>
+              </td>
+              <td>
+                {% if alerta.ear_valor %}
+                  <span class="td-ear">{{ alerta.ear_valor }}</span>
+                {% else %}
+                  <span style="color:var(--muted)">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if alerta.parpadeos_minuto %}
+                  <span class="td-parp">{{ alerta.parpadeos_minuto }}/min</span>
+                {% else %}
+                  <span style="color:var(--muted)">—</span>
+                {% endif %}
+              </td>
+              <td style="font-size:.78rem;color:var(--muted);max-width:200px;">{{ alerta.mensaje|truncatechars:60 }}</td>
+              <td>
+                {% if alerta.recomendacion_ia %}
+                  <span class="badge-con-ia">Con IA</span>
+                {% else %}
+                  <span class="badge-sin-ia">Sin IA</span>
+                {% endif %}
+              </td>
+              <td class="td-expand">
+                {% if alerta.recomendacion_ia %}
+                <button class="btn-expand" id="btn-{{ forloop.counter }}" onclick="event.stopPropagation(); toggleIA({{ forloop.counter }})">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                {% else %}
+                <span style="color:var(--muted);font-size:.7rem">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            <!-- Fila IA expandible -->
+            <tr class="fila-ia" id="ia-{{ forloop.counter }}">
+              <td colspan="8" class="ia-cell">
+                {% if alerta.recomendacion_ia %}
+                <div class="ia-block-tabla">
+                  <div class="ia-block-label">
+                    <span class="ia-badge sm">Groq IA</span>
+                    Recomendación médica
+                  </div>
+                  <p class="ia-block-text">{{ alerta.recomendacion_ia }}</p>
+                </div>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="8">
+                <div class="tabla-empty-adv">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#6b85a8" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  <p>Aún no hay alertas registradas en modo avanzado.</p>
+                </div>
+              </td>
+            </tr>
           {% endif %}
-        </div>
-        {% endfor %}
-      {% else %}
-        <div class="hist-empty">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#6b85a8" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <p>Aún no hay alertas registradas en modo avanzado.</p>
-        </div>
+        </tbody>
+      </table>
+      {% if alertas %}
+      <div class="tabla-footer-adv">
+        <span>{{ alertas|length }} registro{{ alertas|length|pluralize }} · Haz clic en una fila para ver la recomendación IA</span>
+        <span>{{ usuario.nombre }}</span>
+      </div>
       {% endif %}
     </div>
+
   </main>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // ── Gráfica 1: Alertas por hora del día ──
+    // ── Toggle filas IA ──
+    function toggleIA(n) {
+      const fila = document.getElementById('ia-' + n);
+      const btn  = document.getElementById('btn-' + n);
+      if (!fila) return;
+      fila.classList.toggle('visible');
+      if (btn) btn.classList.toggle('abierto');
+    }
+
+    // ── Gráfica 1: alertas por día + hora (agrupadas) ──
     const horasLabels = {{ horas_labels|default:"[]"|safe }};
     const horasData   = {{ horas_data|default:"[]"|safe }};
 
     const ctxHoras = document.getElementById('chartHoras')?.getContext('2d');
-    if (ctxHoras) {
+    if (ctxHoras && horasLabels.length) {
       new Chart(ctxHoras, {
         type: 'bar',
         data: {
@@ -146,7 +374,7 @@
           datasets: [{
             label: 'Alertas',
             data: horasData,
-            backgroundColor: 'rgba(129,140,248,.45)',
+            backgroundColor: 'rgba(129,140,248,.5)',
             borderColor: '#818cf8',
             borderWidth: 1.5,
             borderRadius: 5,
@@ -163,20 +391,19 @@
             }
           },
           scales: {
-            x: { grid: { display: false }, ticks: { color: '#6b85a8', font: { size: 11 } } },
-            y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,.05)' },
-                 ticks: { color: '#6b85a8', font: { size: 11 }, stepSize: 1 } }
+            x: { grid:{display:false}, ticks:{color:'#6b85a8', font:{size:10}, maxRotation:45} },
+            y: { beginAtZero:true, grid:{color:'rgba(255,255,255,.05)'}, ticks:{color:'#6b85a8', font:{size:11}, stepSize:1} }
           }
         }
       });
     }
 
-    // ── Gráfica 2: EAR por alerta (evolución de fatiga) ──
+    // ── Gráfica 2: EAR por alerta ──
     const earLabels = {{ ear_labels|default:"[]"|safe }};
     const earData   = {{ ear_data|default:"[]"|safe }};
 
     const ctxEAR = document.getElementById('chartEAR')?.getContext('2d');
-    if (ctxEAR) {
+    if (ctxEAR && earLabels.length) {
       new Chart(ctxEAR, {
         type: 'line',
         data: {
@@ -198,7 +425,7 @@
               data: earLabels.map(() => 0.30),
               borderColor: '#818cf8',
               borderWidth: 1.5,
-              borderDash: [6, 3],
+              borderDash: [6,3],
               pointRadius: 0,
               fill: false,
             }
@@ -206,17 +433,10 @@
         },
         options: {
           responsive: true,
-          plugins: {
-            legend: {
-              display: true,
-              labels: { color: '#6b85a8', font: { size: 11 }, boxWidth: 14 }
-            }
-          },
+          plugins: { legend:{ display:true, labels:{color:'#6b85a8', font:{size:11}, boxWidth:14} } },
           scales: {
-            x: { grid: { display: false }, ticks: { color: '#6b85a8', font: { size: 10 },
-                 maxTicksLimit: 10 } },
-            y: { min: 0, max: 0.5, grid: { color: 'rgba(255,255,255,.05)' },
-                 ticks: { color: '#6b85a8', font: { size: 11 } } }
+            x: { grid:{display:false}, ticks:{color:'#6b85a8', font:{size:10}, maxTicksLimit:10} },
+            y: { min:0, max:0.5, grid:{color:'rgba(255,255,255,.05)'}, ticks:{color:'#6b85a8', font:{size:11}} }
           }
         }
       });
